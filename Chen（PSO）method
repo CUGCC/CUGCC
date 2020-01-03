@@ -1,0 +1,185 @@
+****************main****************
+N=80;
+c1=2;
+c2=2;
+w=0.5;
+M=500;
+D=9;
+[xm,fv]=PSO(@fitness,N,c1,c2,w,M,D);
+xm;
+fv;
+***********************************
+****************PSO****************
+function[xm,fv]=PSO(fitness,N,c1,c2,w,M,D)
+format long;
+xMax1=2;
+xMin1=0;
+x1=rand(N,1)*(xMax1-xMin1)+xMin1;
+xMax2=500;
+xMin2=0;
+x2=rand(N,1)*(xMax2-xMin2)+xMin2;
+xMax3=500;
+xMin3=0;
+x3=rand(N,1)*(xMax3-xMin3)+xMin3;
+xMax4=1;
+xMin4=0;
+x4=rand(N,1)*(xMax4-xMin4)+xMin4;
+xMax5=1;
+xMin5=0;
+x5=rand(N,1)*(xMax5-xMin5)+xMin5;
+xMax6=0.001;
+xMin6=0.000001;
+x6=rand(N,1)*(xMax6-xMin6)+xMin6;
+xMax7=0.001;
+xMin7=0.000001;
+x7=rand(N,1)*(xMax7-xMin7)+xMin7;
+xMax8=0.001;
+xMin8=0.000001;
+x8=rand(N,1)*(xMax8-xMin8)+xMin8;
+xMax9=0.001;
+xMin9=0.000001;
+x9=rand(N,1)*(xMax9-xMin9)+xMin9;
+x=[x1,x2,x3,x4,x5,x6,x7,x8,x9];
+vMax1=10;
+vMin1=0;
+v=rand(N,D)*(vMax1-vMin1)+xMin1;
+d=1:N;
+d=d';
+dd=d;
+xMax=[xMax1 xMax2 xMax3 xMax4 xMax5 xMax6 xMax7 xMax8 xMax9];
+[d,xMax]=ndgrid(d,xMax);
+xMin=[xMin1 xMin2 xMin3 xMin4 xMin5 xMin6 xMin7 xMin8 xMin9];
+[dd,xMin]=ndgrid(dd,xMin);
+
+for i=1:N
+    if isnan(fitness(x(i,:)))==1
+        p(i)=Inf;
+    else
+    p(i)=fitness(x(i,:));
+    end
+    y(i,:)=x(i,:);
+end
+pg=x(N,:);
+%pg=x(N,:)
+for i=1:(N-1)
+    %for i=1:(N-1)
+    if isnan(fitness(x(i,:)))==1
+        comp1=Inf;
+    else comp1=fitness(x(i,:));
+    end
+        if comp1<fitness(pg)
+            pg=x(i,:);
+        end
+end
+for t=1:M
+    %for t=1:M
+    for i=1:N
+        %for i=1:N
+        v(i,:)=w*v(i,:)+c1*rand*(y(i,:)-x(i,:))+c2*rand*(pg-x(i,:));
+        x(i,:)=x(i,:)+v(i,:);
+        
+        bri1=x(i,:)-xMax(i,:);
+        loc1=find(bri1>0);
+        x(i,loc1)=xMax(i,loc1);
+        
+        bri2=x(i,:)-xMin(i,:);
+        loc2=find(bri2<0);
+        x(i,loc2)=xMin(i,loc2);
+    if isnan(fitness(x(i,:)))==1
+        comp2=Inf;
+    else comp2=fitness(x(i,:));
+    end
+        if comp2<p(i)
+            p(i)=fitness(x(i,:));
+            y(i,:)=x(i,:);
+        end
+        if p(i)<fitness(pg)
+            pg=y(i,:);
+        end
+    end
+    pbest(t)=fitness(pg);
+    if pbest(t)<0.01
+        break;
+    end
+end
+save fv pbest -ascii;
+xm=pg';
+fv=fitness(pg);
+****************************
+*********fitness************
+function F=fitness(x)
+format long;
+Q1=302;
+Q2=122;
+b1=44;
+b3=10;
+b4=5;
+alpha=220;
+r=0.07;
+rw=0.07;
+t=[0.000347222	0.000694444	0.001388889	0.002083333	0.002777778	0.003472222	0.004166667	0.004861111	0.005555556	0.00625	0.008333333	0.009027778	0.009375	0.009548611	0.009722222	0.009895833	0.010069444	0.010243056	0.010416667	0.011111111	0.011805556	0.0125	0.013194444	0.016666667	0.017361111	0.024305556	0.027777778
+];
+s=[4.8524	8.6776	13.8277	17.0562	19.2382	20.5576	21.1994	21.8859	22.3244	22.6262	22.8116	22.9616	23.0132	23.0364	22.9837	22.9237	22.8598	22.8205	22.7676	22.9192	23.0628	23.1489	23.178	23.23	23.2646	23.3323	23.3857
+];
+L=length(t);
+n=10; 
+for j=1:L
+    for i=1:n
+        a=fix((i+1)/2);
+        b=min(i,n/2);
+        xx=0;
+        for k=a:b
+            xx=xx+k^(n/2)*factorial(2*k)/(factorial(n/2-k)*factorial(k)*factorial(k-1)*factorial(i-k)*factorial(2*k-i));%Stehfest公式中的阶乘过程
+        end
+        V(i)=(-1)^(n/2+i)*xx; 
+        p(i)=log(2)*i/t(j);
+        A1=sqrt(x(8)*p(i)/x(4));
+        B1=sqrt(x(9)*p(i)/x(5));
+        A2=exp(A1*(b1+b4))+(exp(-A1*(b1+b4)))*(exp(2*A1*(b1+b3+b4)));
+        A3=exp(A1*(b1+b4))-(exp(-A1*(b1+b4)))*(exp(2*A1*(b1+b3+b4)));
+        B2=exp(B1*b4)+exp(B1*(-b4));
+        B3=exp(B1*b4)-exp(B1*(-b4));
+        A4=A2/A3;
+        if isnan(A4)==1
+            A4=-1;
+        end
+        q3=(x(4)/b3)*A1*A4;
+        q4=(x(5)/b4)*B1*B2/B3;
+        lambda1=sqrt((-q3+q4+x(6)*p(i))/x(2));
+        lambda2=sqrt((-q3+q4+x(7)*p(i))/x(3));
+        K=(lambda2*x(3))/(lambda1*x(2));
+        Q=(Q2/p(i))+(Q1-Q2)/(p(i)+alpha);
+        d11(i)=besseli(0,x(1)*lambda1);
+        d12(i)=besselk(1,x(1)*lambda2);
+        d13(i)=besseli(1,x(1)*lambda1);
+        d14(i)=besselk(0,x(1)*lambda2);
+        d21(i)=besselk(1,x(1)*lambda1);
+        d22(i)=besselk(0,x(1)*lambda2);
+        d23(i)=besselk(0,x(1)*lambda1);
+        d24(i)=besselk(1,x(1)*lambda2);
+        d31(i)=besseli(0,rw*lambda1);
+        d32(i)=besselk(0,rw*lambda1);
+        d33(i)=besseli(1,rw*lambda1);
+        d34(i)=besselk(1,rw*lambda1);
+        omega1=K*d11(i)*d12(i)+d13(i)*d14(i);
+        omega2=d21(i)*d22(i)-K*d23(i)*d24(i);
+        H1(i)=pi*rw*rw*p(i)*d31(i)-2*pi*rw*x(2)*lambda1*d33(i);
+        H2(i)=pi*rw*rw*p(i)*d32(i)+2*pi*rw*x(2)*lambda1*d34(i);
+        H3(i)=Q*(omega2*d11(i)+omega1*d23(i));
+        H4(i)=d22(i)*(omega2*H1(i)+omega1*H2(i));
+        D1(i)=(omega2*Q)/(omega2*H1(i)+omega1*H2(i));
+        D2(i)=(omega1*Q)/(omega2*H1(i)+omega1*H2(i));
+        D4(i)=H3(i)/H4(i);
+        d41(i)=besseli(0,r*lambda1);
+        d42(i)=besselk(0,r*lambda1);
+        d43(i)=besselk(0,r*lambda2);
+        f(i)=D1(i)*d41(i)+D2(i)*d42(i);
+        y(i)=log(2)/t(j)*V(i)*f(i);
+    end
+    sc(j)=sum(y);
+end    
+       SS=(s-sc).^2/L;
+        F=sum(SS);
+end
+****************************
+        
